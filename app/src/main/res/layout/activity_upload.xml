@@ -1,0 +1,25 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.myapplication.app.UploadActivity">
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="300dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:id="@+id/result_pic"
+        android:layout_centerHorizontal="true"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/description"
+        android:text="图片上传中，请耐心等待..."
+        android:layout_below="@id/result_pic"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"/>
+</RelativeLayout>
