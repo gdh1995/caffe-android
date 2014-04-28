@@ -1,12 +1,10 @@
 package com.example.myapplication.app;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.media.Image;
 import android.os.Message;
 import android.os.Handler;
-import android.os.StrictMode;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,15 +13,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.json.JSONObject;
+import org.json.JSONException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -38,9 +34,6 @@ public class UploadActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        /*StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog().build());
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedSqlLiteObjects().detectLeakedClosableObjects().penaltyLog().penaltyDeath().build());
-        */
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload);
 
@@ -49,17 +42,16 @@ public class UploadActivity extends ActionBarActivity {
         String pic_path = bundle.getString("pic_path");
         File file_pic = new File(pic_path);
 
-         /*创建一个BitmapFactory.Options类用来处理bitmap；*/
+         /*创建一个BitmapFactory.Options类用来显示bitmap；*/
         BitmapFactory.Options myoptions = new BitmapFactory.Options();
         myoptions.inJustDecodeBounds=false;
         myoptions.inPurgeable=true;
         myoptions.inInputShareable=true;
         myoptions.inPreferredConfig=Bitmap.Config.ARGB_4444;
         Bitmap bitmat = BitmapFactory.decodeFile(file_pic.getAbsolutePath(),myoptions);
-        bitmat = zoomImage(bitmat,100,100);
         img.setImageBitmap(bitmat);
 
-        UploadThread uThread = new UploadThread(file_pic,REQUEST_URL);
+        UploadThread uThread = new UploadThread(bitmat, file_pic,REQUEST_URL);
         new Thread(uThread).start();
     }
 
@@ -78,8 +70,14 @@ public class UploadActivity extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_exit) {
             return true;
+        }
+        switch(item.getItemId())
+        {
+            case R.id.action_cancel:
+                UploadActivity.this.finish();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -90,7 +88,7 @@ public class UploadActivity extends ActionBarActivity {
      * @param RequestURL  请求的rul
      * @return  返回响应的内容
      */
-    public  String uploadFile(File file,String RequestURL)
+    public  String uploadFile(Bitmap bitmap, File file,String RequestURL)
     {
         String result = null;
         String  BOUNDARY =  UUID.randomUUID().toString();  //边界标识   随机生成
@@ -114,29 +112,49 @@ public class UploadActivity extends ActionBarActivity {
                 /**
                  * 当文件不为空，把文件包装并且上传
                  */
-                StringBuffer sb = new StringBuffer();
-                sb.append(PREFIX);
-                sb.append(BOUNDARY);
-                sb.append(LINE_END);
+                StringBuffer  strBuffer =  new StringBuffer();
+                strBuffer.append(PREFIX);
+                strBuffer.append(BOUNDARY);
+                strBuffer.append(LINE_END);
                 /**
                  * 这里重点注意：
                  * name里面的值为服务器端需要key   只有这个key 才可以得到对应的文件
                  * filename是文件的名字，包含后缀名的   比如:abc.png
                  */
-                sb.append("Content-Disposition: form-data; name=\"image\"; filename=\""+file.getName()+"\""+LINE_END);
-                sb.append("Content-Type: image/pjpeg; charset="+CHARSET+LINE_END);
-                sb.append(LINE_END);
+                strBuffer.append("Content-Disposition: form-data; name=\"image\"; filename=\""+file.getName()+"\""+LINE_END);
+                strBuffer.append("Content-Type: image/pjpeg; charset="+CHARSET+LINE_END);
+                strBuffer.append(LINE_END);
 
                 DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
-                dos.write(sb.toString().getBytes());
-                InputStream is = new FileInputStream(file);
+                dos.write(strBuffer.toString().getBytes());
+                /*InputStream is = new FileInputStream(file);
                 byte[] bytes = new byte[1024];
                 int len = 0;
                 while((len=is.read(bytes))!=-1)
                 {
                     dos.write(bytes, 0, len);
                 }
-                is.close();
+                is.close();*/
+                final int maxSize = 500;
+                int outWidth;
+                int outHeight;
+                int inWidth = bitmap.getWidth();
+                int inHeight = bitmap.getHeight();
+                if(inWidth > inHeight){
+                    outWidth = maxSize;
+                    outHeight = (inHeight * maxSize) / inWidth;
+                } else {
+                    outHeight = maxSize;
+                    outWidth = (inWidth * maxSize) / inHeight;
+                }
+                Bitmap bmpCompressed = Bitmap.createScaledBitmap(bitmap, outWidth, outHeight, true);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+                // CompressFormat set up to JPG, you can change to PNG or whatever you want;
+                bmpCompressed.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                byte[] data = bos.toByteArray();
+                dos.write(data);
+
                 dos.write(LINE_END.getBytes());
                 byte[] end_data = (PREFIX+BOUNDARY+PREFIX+LINE_END).getBytes();
                 dos.write(end_data);
@@ -178,12 +196,14 @@ public class UploadActivity extends ActionBarActivity {
     class UploadThread implements Runnable {
         private File file;
         private String RequestURL;
-        public UploadThread(File file, String RequestURL){
+        private Bitmap bitmap;
+        public UploadThread(Bitmap bitmap,File file, String RequestURL){
+            this.bitmap = bitmap;
             this.file = file;
             this.RequestURL = RequestURL;
         }
         public void run() {
-            String result = uploadFile(file, RequestURL);
+            String result = uploadFile(bitmap,file, RequestURL);
             Message msg = new Message();
             Bundle data = new Bundle();
             data.putString("result",result);
@@ -199,60 +219,28 @@ public class UploadActivity extends ActionBarActivity {
             TextView desView = (TextView)findViewById(R.id.description);
             Bundle data = msg.getData();
             String result = data.getString("result");
+
+            JSONObject jsonObj = null;
             String description = "";
-            if(result.indexOf("gender") > -1)
-            {
-                if(result.indexOf("female") > -1)
+            String gender = null;
+            try{
+                jsonObj  = new JSONObject(result);
+                gender = jsonObj.getString("gender");
+                if(gender != null)
                 {
-                    description += "性别：女\n";
-                }
-                else
-                {
-                    description += "性别：男\n";
+                    description += "gender:"+gender+"\n";
                 }
             }
-            if(description == "")
+            catch (JSONException e)
+            {
+                e.printStackTrace();
+            }
+
+            if(description.equals(""))
             {
                 description = "没有识别任何结果";
             }
             desView.setText(description);
         }
     };
-
-    /***
-     * 图片的缩放方法
-     * @param srcImage ：源图片资源
-     * @param newWidth ：缩放后宽度
-     * @param newHeight ：缩放后高度
-     * @return
-     */
-    public static Bitmap zoomImage(Bitmap srcImage, double newWidth,
-                                   double newHeight) {
-        // 获取这个图片的宽和高
-        float width = srcImage.getWidth();
-        float height = srcImage.getHeight();
-        // 创建操作图片用的matrix对象
-        Matrix matrix = new Matrix();
-        // 计算宽高缩放率
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // 缩放图片动作
-        matrix.postScale(scaleWidth, scaleHeight);
-        Bitmap bitmap = Bitmap.createBitmap(srcImage, 0, 0, (int) width,
-                (int) height, matrix, true);
-        return bitmap;
-    }
-
-    static boolean  saveBitmap2file(Bitmap bmp,String filename){
-        Bitmap.CompressFormat format= Bitmap.CompressFormat.JPEG;
-        int quality = 100;
-        OutputStream stream = null;
-        try {
-            stream = new FileOutputStream("/sdcard/ccamera/" + filename);
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return bmp.compress(format, quality, stream);
-    }
 }

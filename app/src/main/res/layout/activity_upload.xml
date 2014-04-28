@@ -22,4 +22,5 @@
         android:layout_below="@id/result_pic"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"/>
+
 </RelativeLayout>

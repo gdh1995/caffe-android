@@ -1,40 +1,17 @@
 package com.example.myapplication.app;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.CursorLoader;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Point;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Bundle;
-import android.hardware.Camera;
-import android.os.Message;
 import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.Display;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.EditText;
 import android.content.Intent;
 import android.widget.Toast;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.File;
 
 public class MainActivity extends Activity {
@@ -46,8 +23,9 @@ public class MainActivity extends Activity {
 
     // 获取sd卡根目录地址,并创建图片父目录文件对象和文件的对象;
     String file_str = Environment.getExternalStorageDirectory().getPath();
-    File mars_file = new File(file_str + "/ccamera");
-    File file_go = new File(file_str + "/ccamera/file.jpg");
+    String file_path = file_str + "/ccamera";
+    File mars_file = new File(file_path);
+    File file_go = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,6 +51,7 @@ public class MainActivity extends Activity {
 
                     // 设置跳转的系统拍照的activity为：MediaStore.ACTION_IMAGE_CAPTURE ;
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    file_go = new File(file_path+"/"+System.currentTimeMillis()+".jpg");
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file_go));
                     //跳转到拍照界面;
                     startActivityForResult(intent, TAKE_PICTURE);
@@ -94,6 +73,26 @@ public class MainActivity extends Activity {
         });
 
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_cancel) {
+            return true;
+        }
+        switch(item.getItemId())
+        {
+            case R.id.action_exit:
+                finish();
+                System.exit(0);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     //拍照结束后显示图片;
     @Override
@@ -132,7 +131,6 @@ public class MainActivity extends Activity {
                     }
                 }
             } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "打开图片出错"+e.getMessage(),Toast.LENGTH_LONG).show();
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
