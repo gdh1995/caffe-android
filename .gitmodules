@@ -1,0 +1,3 @@
+[submodule "caffe-android-lib"]
+	path = caffe-android-lib
+	url = https://github.com/gdh1995/caffe-android-lib
