@@ -1,3 +1,4 @@
+
 # Built application files
 *.apk
 *.ap_
@@ -25,3 +26,12 @@ proguard/
 
 # Log Files
 *.log
+
+.idea/
+
+# WQF's old filters
+
+.gradle
+/local.properties
+/.idea/workspace.xml
+.DS_Store
