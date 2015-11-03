@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.UUID;
 
 
@@ -222,13 +223,18 @@ public class UploadActivity extends ActionBarActivity {
 
             JSONObject jsonObj = null;
             String description = "";
-            String gender = null;
+            String gender = null, smiling = null, eyewear = null, mustache = null;
             try{
                 jsonObj  = new JSONObject(result);
-                gender = jsonObj.getString("gender");
-                if(gender != null)
-                {
-                    description += "gender:"+gender+"\n";
+                Iterator<?> keys = jsonObj.keys();
+
+                while(keys.hasNext()){
+                    String key = (String)keys.next();
+                    try{
+                        String value = (String)jsonObj.get(key);
+                        description += key + "： "+ value +"\n";
+                    }catch(Exception e){
+                    }
                 }
             }
             catch (JSONException e)
