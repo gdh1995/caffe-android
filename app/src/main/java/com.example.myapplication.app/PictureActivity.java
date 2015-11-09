@@ -1,38 +1,25 @@
 package com.example.myapplication.app;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Message;
-import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.json.JSONObject;
 import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Iterator;
-import java.util.UUID;
 
 
 public class PictureActivity extends ActionBarActivity {
-
-    private static final int TIME_OUT = 3000;   //超时时间
-    private static final String CHARSET = "utf-8"; //设置编码
-    private static final String REQUEST_URL = "http://166.111.80.233:3333/upload";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +40,7 @@ public class PictureActivity extends ActionBarActivity {
         Bitmap bitmat = BitmapFactory.decodeFile(file_pic.getAbsolutePath(),myoptions);
         img.setImageBitmap(bitmat);
 
-        UploadThread uThread = new UploadThread(new MyHandler(this), bitmat, file_pic,REQUEST_URL);
+        CNNWorker uThread = new CNNWorker(new MyHandler(this), bitmat, file_pic);
         new Thread(uThread).start();
     }
 
@@ -84,137 +71,6 @@ public class PictureActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * android上传文件到服务器
-     * @param file  需要上传的文件
-     * @param RequestURL  请求的rul
-     * @return  返回响应的内容
-     */
-    public static String uploadFile(Bitmap bitmap, File file,String RequestURL)
-    {
-        String result = null;
-        String  BOUNDARY =  UUID.randomUUID().toString();  //边界标识   随机生成
-        String PREFIX = "--" , LINE_END = "\r\n";
-        String CONTENT_TYPE = "multipart/form-data";   //内容类型
-
-        try {
-            URL url = new URL(RequestURL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(TIME_OUT);
-            conn.setDoInput(true);  //允许输入流
-            conn.setDoOutput(true); //允许输出流
-            conn.setUseCaches(false);  //不允许使用缓存
-            conn.setRequestMethod("POST");  //请求方式
-            conn.setRequestProperty("Charset", CHARSET);  //设置编码
-            conn.setRequestProperty("connection", "keep-alive");
-            conn.setRequestProperty("Content-Type", CONTENT_TYPE + ";boundary=" + BOUNDARY);
-            conn.connect();
-            if(file!=null)
-            {
-                /**
-                 * 当文件不为空，把文件包装并且上传
-                 */
-                StringBuffer  strBuffer =  new StringBuffer();
-                strBuffer.append(PREFIX);
-                strBuffer.append(BOUNDARY);
-                strBuffer.append(LINE_END);
-                /**
-                 * 这里重点注意：
-                 * name里面的值为服务器端需要key   只有这个key 才可以得到对应的文件
-                 * filename是文件的名字，包含后缀名的   比如:abc.png
-                 */
-                strBuffer.append("Content-Disposition: form-data; name=\"image\"; filename=\""+file.getName()+"\""+LINE_END);
-                strBuffer.append("Content-Type: image/pjpeg; charset="+CHARSET+LINE_END);
-                strBuffer.append(LINE_END);
-
-                DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
-                dos.write(strBuffer.toString().getBytes());
-                /*InputStream is = new FileInputStream(file);
-                byte[] bytes = new byte[1024];
-                int len = 0;
-                while((len=is.read(bytes))!=-1)
-                {
-                    dos.write(bytes, 0, len);
-                }
-                is.close();*/
-                final int maxSize = 500;
-                int outWidth;
-                int outHeight;
-                int inWidth = bitmap.getWidth();
-                int inHeight = bitmap.getHeight();
-                if(inWidth > inHeight){
-                    outWidth = maxSize;
-                    outHeight = (inHeight * maxSize) / inWidth;
-                } else {
-                    outHeight = maxSize;
-                    outWidth = (inWidth * maxSize) / inHeight;
-                }
-                Bitmap bmpCompressed = Bitmap.createScaledBitmap(bitmap, outWidth, outHeight, true);
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-                // CompressFormat set up to JPG, you can change to PNG or whatever you want;
-                bmpCompressed.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-                byte[] data = bos.toByteArray();
-                dos.write(data);
-
-                dos.write(LINE_END.getBytes());
-                byte[] end_data = (PREFIX+BOUNDARY+PREFIX+LINE_END).getBytes();
-                dos.write(end_data);
-                dos.flush();
-                /**
-                 * 获取响应码  200=成功
-                 * 当响应成功，获取响应的流
-                 */
-                int res = conn.getResponseCode();
-                if(res==200)
-                {
-                    InputStream input =  conn.getInputStream();
-                    StringBuffer  strBuf =  new StringBuffer();
-                    int ss ;
-                    while((ss=input.read())!=-1)
-                    {
-                        strBuf.append((char)ss);
-                    }
-                    result = strBuf.toString();
-                }
-                else if(res == 400)
-                {
-                    result =  "错误400";
-                }
-                else{
-                    result =  "服务器没有返回数据";
-                }
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            result = "上传失败" + e.getMessage();
-        } catch (IOException e) {
-            e.printStackTrace();
-            result = "上传失败" + e.getMessage();
-        }
-        return result;
-    }
-
-    public static class UploadThread implements Runnable {
-        private File file;
-        private String RequestURL;
-        private Bitmap bitmap;
-        private MyHandler handler;
-        public UploadThread(MyHandler handler, Bitmap bitmap,File file, String RequestURL) {
-            this.handler = handler;
-            this.bitmap = bitmap;
-            this.file = file;
-            this.RequestURL = RequestURL;
-        }
-        public void run() {
-            String result = uploadFile(bitmap,file, RequestURL);
-            Message msg = new Message();
-            Bundle data = new Bundle();
-            data.putString("result",result);
-            msg.setData(data);
-            handler.sendMessage(msg);
-        }
-    }
 
     public static class MyHandler extends Handler {
         WeakReference<PictureActivity> mActivity;
@@ -229,9 +85,8 @@ public class PictureActivity extends ActionBarActivity {
             Bundle data = msg.getData();
             String result = data.getString("result");
 
-            JSONObject jsonObj = null;
+            JSONObject jsonObj;
             String description = "";
-            String gender = null, smiling = null, eyewear = null, mustache = null;
             try{
                 jsonObj  = new JSONObject(result);
                 Iterator<?> keys = jsonObj.keys();
@@ -257,5 +112,5 @@ public class PictureActivity extends ActionBarActivity {
             TextView desView = (TextView)mActivity.get().findViewById(R.id.description);
             desView.setText(description);
         }
-    };
+    }
 }
