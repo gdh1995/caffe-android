@@ -20,6 +20,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,7 +53,7 @@ public class PictureActivity extends ActionBarActivity {
         Bitmap bitmat = BitmapFactory.decodeFile(file_pic.getAbsolutePath(),myoptions);
         img.setImageBitmap(bitmat);
 
-        UploadThread uThread = new UploadThread(bitmat, file_pic,REQUEST_URL);
+        UploadThread uThread = new UploadThread(new MyHandler(this), bitmat, file_pic,REQUEST_URL);
         new Thread(uThread).start();
     }
 
@@ -89,7 +90,7 @@ public class PictureActivity extends ActionBarActivity {
      * @param RequestURL  请求的rul
      * @return  返回响应的内容
      */
-    public  String uploadFile(Bitmap bitmap, File file,String RequestURL)
+    public static String uploadFile(Bitmap bitmap, File file,String RequestURL)
     {
         String result = null;
         String  BOUNDARY =  UUID.randomUUID().toString();  //边界标识   随机生成
@@ -194,11 +195,13 @@ public class PictureActivity extends ActionBarActivity {
         return result;
     }
 
-    class UploadThread implements Runnable {
+    public static class UploadThread implements Runnable {
         private File file;
         private String RequestURL;
         private Bitmap bitmap;
-        public UploadThread(Bitmap bitmap,File file, String RequestURL){
+        private MyHandler handler;
+        public UploadThread(MyHandler handler, Bitmap bitmap,File file, String RequestURL) {
+            this.handler = handler;
             this.bitmap = bitmap;
             this.file = file;
             this.RequestURL = RequestURL;
@@ -213,11 +216,16 @@ public class PictureActivity extends ActionBarActivity {
         }
     }
 
-    Handler handler = new Handler(){
+    public static class MyHandler extends Handler {
+        WeakReference<PictureActivity> mActivity;
+
+        MyHandler(PictureActivity activity) {
+            mActivity = new WeakReference<PictureActivity>(activity);
+        }
+
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            TextView desView = (TextView)findViewById(R.id.description);
             Bundle data = msg.getData();
             String result = data.getString("result");
 
@@ -233,7 +241,7 @@ public class PictureActivity extends ActionBarActivity {
                     try{
                         String value = (String)jsonObj.get(key);
                         description += key + "： "+ value +"\n";
-                    }catch(Exception e){
+                    }catch(Exception ignored){
                     }
                 }
             }
@@ -246,6 +254,7 @@ public class PictureActivity extends ActionBarActivity {
             {
                 description = "没有识别任何结果";
             }
+            TextView desView = (TextView)mActivity.get().findViewById(R.id.description);
             desView.setText(description);
         }
     };
