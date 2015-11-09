@@ -87,7 +87,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // 判断请求码和结果码是否正确;
-        if (requestCode == TAKE_PHOTO && resultCode == RESULT_OK) {
+        if (resultCode != RESULT_OK) {
+        } else if (requestCode == TAKE_PHOTO && resultCode == RESULT_OK) {
             Intent intent = new Intent(MainActivity.this, PictureActivity.class);
             Bundle bundle = new Bundle();
             bundle.putString("pic_path", file_go.getPath());
