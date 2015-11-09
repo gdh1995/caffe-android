@@ -1,2 +1,4 @@
 *
 !.git*
+!libcaffe.so
+!libcaffe_jni.so
