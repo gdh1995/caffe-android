@@ -11,13 +11,8 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.lang.ref.WeakReference;
-import java.util.Iterator;
-
 
 public class PictureActivity extends ActionBarActivity {
 
@@ -31,23 +26,22 @@ public class PictureActivity extends ActionBarActivity {
         String pic_path = bundle.getString("pic_path");
         File file_pic = new File(pic_path);
 
-         /*创建一个BitmapFactory.Options类用来显示bitmap；*/
-        BitmapFactory.Options myoptions = new BitmapFactory.Options();
-        myoptions.inJustDecodeBounds=false;
-        myoptions.inPurgeable=true;
-        myoptions.inInputShareable=true;
-        myoptions.inPreferredConfig=Bitmap.Config.ARGB_4444;
-        Bitmap bitmat = BitmapFactory.decodeFile(file_pic.getAbsolutePath(),myoptions);
-        img.setImageBitmap(bitmat);
+        /* 创建一个BitmapFactory.Options类用来显示bitmap */
+        BitmapFactory.Options my_options = new BitmapFactory.Options();
+        my_options.inJustDecodeBounds = false;
+        my_options.inPurgeable = true;
+        my_options.inInputShareable = true;
+        my_options.inPreferredConfig = Bitmap.Config.ARGB_4444;
+        Bitmap bitmap = BitmapFactory.decodeFile(file_pic.getAbsolutePath(), my_options);
+        img.setImageBitmap(bitmap);
 
-        CNNWorker uThread = new CNNWorker(new MyHandler(this), bitmat, file_pic);
+        CNNWorker uThread = new CNNWorker(new MyHandler(this), bitmap, file_pic);
         new Thread(uThread).start();
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        
+
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.upload, menu);
         return true;
@@ -62,8 +56,7 @@ public class PictureActivity extends ActionBarActivity {
         if (id == R.id.action_exit) {
             return true;
         }
-        switch(item.getItemId())
-        {
+        switch (item.getItemId()) {
             case R.id.action_cancel:
                 PictureActivity.this.finish();
                 break;
@@ -74,6 +67,7 @@ public class PictureActivity extends ActionBarActivity {
 
     public static class MyHandler extends Handler {
         WeakReference<PictureActivity> mActivity;
+        public String lastResult;
 
         MyHandler(PictureActivity activity) {
             mActivity = new WeakReference<PictureActivity>(activity);
@@ -83,34 +77,16 @@ public class PictureActivity extends ActionBarActivity {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             Bundle data = msg.getData();
-            String result = data.getString("result");
+            String description = data.getString("result");
 
-            JSONObject jsonObj;
-            String description = "";
-            try{
-                jsonObj  = new JSONObject(result);
-                Iterator<?> keys = jsonObj.keys();
-
-                while(keys.hasNext()){
-                    String key = (String)keys.next();
-                    try{
-                        String value = (String)jsonObj.get(key);
-                        description += key + "： "+ value +"\n";
-                    }catch(Exception ignored){
-                    }
-                }
+            if (description.equals("")) {
+                description = "没有任何识别结果";
             }
-            catch (JSONException e)
-            {
-                e.printStackTrace();
+            lastResult = description;
+            if (mActivity.get() != null) {
+                TextView desView = (TextView) mActivity.get().findViewById(R.id.description);
+                desView.setText(description);
             }
-
-            if(description.equals(""))
-            {
-                description = "没有识别任何结果";
-            }
-            TextView desView = (TextView)mActivity.get().findViewById(R.id.description);
-            desView.setText(description);
         }
     }
 }
