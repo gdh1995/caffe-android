@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.UUID;
 
 
-public class UploadActivity extends ActionBarActivity {
+public class PictureActivity extends ActionBarActivity {
 
     private static final int TIME_OUT = 3000;   //超时时间
     private static final String CHARSET = "utf-8"; //设置编码
@@ -77,7 +77,7 @@ public class UploadActivity extends ActionBarActivity {
         switch(item.getItemId())
         {
             case R.id.action_cancel:
-                UploadActivity.this.finish();
+                PictureActivity.this.finish();
                 break;
         }
         return super.onOptionsItemSelected(item);

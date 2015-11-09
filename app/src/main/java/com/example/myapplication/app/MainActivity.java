@@ -100,7 +100,7 @@ public class MainActivity extends Activity {
         // TODO Auto-generated method stub
         // 判断请求码和结果码是否正确，如果正确的话就在uploadActivity上显示刚刚所拍照的图片;
         if (requestCode == TAKE_PICTURE && resultCode == this.RESULT_OK) {
-            Intent intent = new Intent(MainActivity.this,UploadActivity.class);
+            Intent intent = new Intent(MainActivity.this,PictureActivity.class);
             Bundle bundle = new Bundle();
             bundle.putString("pic_path", file_go.getPath());
             intent.putExtras(bundle);
@@ -119,7 +119,7 @@ public class MainActivity extends Activity {
                     String path = cursor.getString(colunm_index);
                     if(path.endsWith("jpg")||path.endsWith("png"))
                     {
-                        Intent intent = new Intent(MainActivity.this,UploadActivity.class);
+                        Intent intent = new Intent(MainActivity.this,PictureActivity.class);
                         Bundle bundle = new Bundle();
                         bundle.putString("pic_path", path);
                         intent.putExtras(bundle);

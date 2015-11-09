@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.myapplication.app.UploadActivity"
+            android:name="com.example.myapplication.app.PictureActivity"
             android:label="@string/title_activity_upload" >
         </activity>
     </application>
