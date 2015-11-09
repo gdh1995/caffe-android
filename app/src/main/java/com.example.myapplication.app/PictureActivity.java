@@ -20,7 +20,7 @@ public class PictureActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_upload);
+        setContentView(R.layout.activity_picture);
 
         ImageView img = (ImageView) findViewById(R.id.result_pic);
         Bundle bundle = this.getIntent().getExtras();
@@ -43,7 +43,7 @@ public class PictureActivity extends ActionBarActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.upload, menu);
+        getMenuInflater().inflate(R.menu.picture, menu);
         return true;
     }
 

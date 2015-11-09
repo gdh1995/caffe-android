@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">慧眼识人</string>
+    <string name="app_name">慧眼识物</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_exit">退出</string>
     <string name="action_cancel">返回</string>
-    <string name="hello">Hello World, CaptureImage!</string>
-    <string name="photo_name">相片名称</string>
-    <string name="title_activity_upload">慧眼识人</string>
+    <string name="photo_name">图片名</string>
+    <string name="title_activity_picture">识别</string>
 
 </resources>

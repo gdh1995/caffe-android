@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/description"
-        android:text="图片上传中，请耐心等待..."
+        android:text="图片识别中，请耐心等待..."
         android:layout_below="@id/result_pic"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"/>

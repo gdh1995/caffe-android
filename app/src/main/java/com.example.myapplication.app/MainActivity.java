@@ -17,7 +17,7 @@ import java.io.File;
 public class MainActivity extends Activity {
     private static final int TAKE_PHOTO = 1;
     private static final int READ_LOCAL = 2;
-    Button open_camera, upload_image;
+    Button open_camera, local_image;
 
     // 获取sd卡根目录地址,并创建图片父目录文件对象和文件的对象;
     String file_str = Environment.getExternalStorageDirectory().getPath();
@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         open_camera = (Button) findViewById(R.id.my_camera_button);
-        upload_image = (Button) findViewById(R.id.upload_image);
+        local_image = (Button) findViewById(R.id.local_image);
 
 
         // 拍照
@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
         });
 
         // 选择本地文件
-        upload_image.setOnClickListener(new View.OnClickListener() {
+        local_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
