@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -35,13 +36,12 @@ public class PictureActivity extends ActionBarActivity {
         Bitmap bitmap = BitmapFactory.decodeFile(file_pic.getAbsolutePath(), my_options);
         img.setImageBitmap(bitmap);
 
-        CNNWorker uThread = new CNNWorker(new MyHandler(this), bitmap, file_pic);
-        new Thread(uThread).start();
+        CNNWorker workThread = new CNNWorker(new MyHandler(this), file_pic);
+        new Thread(workThread).start();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.upload, menu);
         return true;
@@ -77,16 +77,23 @@ public class PictureActivity extends ActionBarActivity {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             Bundle data = msg.getData();
-            String description = data.getString("result");
+            int[] result = data.getIntArray("result");
+            String description = "没有任何识别结果";
 
-            if (description.equals("")) {
-                description = "没有任何识别结果";
+            if (result != null && result.length > 0) {
+                String str = "";
+                for (int i = 0; i < result.length; i++) {
+                    str += String.valueOf(result[i]);
+                }
+                description = "输出为: " + str;
             }
-            lastResult = description;
+
             if (mActivity.get() != null) {
                 TextView desView = (TextView) mActivity.get().findViewById(R.id.description);
                 desView.setText(description);
             }
+            lastResult = description;
+            Log.i("CNN Result", description);
         }
     }
 }

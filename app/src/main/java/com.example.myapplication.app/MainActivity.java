@@ -15,12 +15,8 @@ import android.widget.Toast;
 import java.io.File;
 
 public class MainActivity extends Activity {
-    /**
-     * Called when the activity is first created.
-     */
-
-    private static final int TAKE_PICTURE = 1;
-    private static final int LOCAL_UPLOAD = 2;
+    private static final int TAKE_PHOTO = 1;
+    private static final int READ_LOCAL = 2;
     Button open_camera, upload_image;
 
     // 获取sd卡根目录地址,并创建图片父目录文件对象和文件的对象;
@@ -37,7 +33,7 @@ public class MainActivity extends Activity {
         upload_image = (Button) findViewById(R.id.upload_image);
 
 
-        //拍照
+        // 拍照
         open_camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -49,20 +45,20 @@ public class MainActivity extends Activity {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 file_go = new File(file_path + "/" + System.currentTimeMillis() + ".jpg");
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file_go));
-                startActivityForResult(intent, TAKE_PICTURE);
+                startActivityForResult(intent, TAKE_PHOTO);
             } else {
                 Toast.makeText(MainActivity.this, "请先安装好sd卡", Toast.LENGTH_LONG).show();
             }
             }
         });
 
-        //上传
+        // 选择本地文件
         upload_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
-            startActivityForResult(intent, LOCAL_UPLOAD);
+            startActivityForResult(intent, READ_LOCAL);
             }
         });
 
@@ -87,28 +83,27 @@ public class MainActivity extends Activity {
     }
 
 
-    //拍照结束后显示图片;
+    // 拍照/选择结束后处理
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // 判断请求码和结果码是否正确;
-        if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
+        if (requestCode == TAKE_PHOTO && resultCode == RESULT_OK) {
             Intent intent = new Intent(MainActivity.this, PictureActivity.class);
             Bundle bundle = new Bundle();
             bundle.putString("pic_path", file_go.getPath());
             intent.putExtras(bundle);
             startActivity(intent);
-        } else if (requestCode == LOCAL_UPLOAD) {
+        } else if (requestCode == READ_LOCAL) {
             Cursor cursor = null;
             try {
                 Uri uri = data.getData();
                 String[] pojo = {MediaStore.Images.Media.DATA};
                 cursor = getContentResolver().query(uri, pojo, null, null, null);
-                //Cursor cursor = managedQuery(uri, pojo, null, null,null);
                 if (cursor != null) {
                     int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
                     cursor.moveToFirst();
                     String path = cursor.getString(column_index);
-                    if (path.endsWith("jpg") || path.endsWith("png")) {
+                    if (path.endsWith(".jpg") || path.endsWith(".png") || path.endsWith(".bmp")) {
                         Intent intent = new Intent(MainActivity.this, PictureActivity.class);
                         Bundle bundle = new Bundle();
                         bundle.putString("pic_path", path);
