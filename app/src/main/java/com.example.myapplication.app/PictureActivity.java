@@ -36,7 +36,7 @@ public class PictureActivity extends ActionBarActivity {
         Bitmap bitmap = BitmapFactory.decodeFile(file_pic.getAbsolutePath(), my_options);
         img.setImageBitmap(bitmap);
 
-        CNNWorker workThread = new CNNWorker(new MyHandler(this), file_pic);
+        CNNWorker workThread = new CNNWorker(new MyHandler(this), this.getApplicationContext(), file_pic);
         new Thread(workThread).start();
     }
 
@@ -82,10 +82,12 @@ public class PictureActivity extends ActionBarActivity {
 
             if (result != null && result.length > 0) {
                 String str = "";
-                for (int i = 0; i < result.length; i++) {
-                    str += String.valueOf(result[i]);
+                String[] labels = IlsvrcLabels.labels;
+                for (int index: result) {
+                    if (index < labels.length)
+                    str += "\n>>> " + labels[index];
                 }
-                description = "输出为: " + str;
+                description = "输出为: " + str.substring(1);
             }
 
             if (mActivity.get() != null) {

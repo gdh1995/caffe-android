@@ -21,7 +21,7 @@ public class MainActivity extends Activity {
 
     // 获取sd卡根目录地址,并创建图片父目录文件对象和文件的对象;
     String file_str = Environment.getExternalStorageDirectory().getPath();
-    String file_path = file_str + "/ccamera";
+    String file_path = file_str + "/caffe-mobile";
     File mars_file = new File(file_path);
     File file_go = null;
 
